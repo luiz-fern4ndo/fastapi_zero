@@ -11,20 +11,21 @@ def test_read_root_deve_retornar_ola_mundo(client):
 
 def test_create_user(client):
 
-    response = client.post('/users/',
+    response = client.post(
+        '/users/',
         json={
             'username': 'alice',
             'email': 'alice@example.com',
-            'password': 'secret'
-        }
+            'password': 'secret',
+        },
     )
 
     assert response.status_code == HTTPStatus.CREATED
     assert response.json() == {
-            'username': 'alice',
-            'email': 'alice@example.com',
-            'id': 1
-        }
+        'username': 'alice',
+        'email': 'alice@example.com',
+        'id': 1,
+    }
 
 
 def test_read_users(client):
@@ -32,13 +33,7 @@ def test_read_users(client):
 
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {
-        'users': [
-            {
-                'username': 'alice',
-                'email': 'alice@example.com',
-                'id': 1
-            }
-        ]
+        'users': [{'username': 'alice', 'email': 'alice@example.com', 'id': 1}]
     }
 
 
@@ -48,15 +43,15 @@ def test_update_user(client):
         json={
             'username': 'bob',
             'email': 'bob@example.com',
-            'password': 'secret'
-        }
+            'password': 'secret',
+        },
     )
 
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {
         'username': 'bob',
         'email': 'bob@example.com',
-        'id': 1
+        'id': 1,
     }
 
 
@@ -64,3 +59,24 @@ def test_delete_user(client):
     response = client.delete('/users/1')
 
     assert response.status_code == HTTPStatus.NO_CONTENT
+
+
+def test_update_user_should_return_not_found__exercicio(client):
+    resposne = client.put(
+        '/users/10',
+        json={
+            'username': 'alice',
+            'email': 'bob@example.com',
+            'password': 'secret',
+        },
+    )
+
+    assert resposne.status_code == HTTPStatus.NOT_FOUND
+    assert resposne.json() == {'detail': 'User not found!'}
+
+
+def test_delete_user_should_return_not_found__exercicio(client):
+    resposne = client.delete('/users/10')
+
+    assert resposne.status_code == HTTPStatus.NOT_FOUND
+    assert resposne.json() == {'detail': 'User not found!'}
