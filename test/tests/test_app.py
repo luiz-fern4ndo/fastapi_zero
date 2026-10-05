@@ -16,15 +16,15 @@ def test_create_user(client):
         json={
             'username': 'alice',
             'email': 'alice@example.com',
-            'password': 'secret'
-        }
+            'password': 'secret',
+        },
     )
 
     assert response.status_code == HTTPStatus.CREATED
     assert response.json() == {
         'username': 'alice',
         'email': 'alice@example.com',
-        'id': 1
+        'id': 1,
     }
 
 
@@ -51,15 +51,26 @@ def test_update_user(client):
         json={
             'username': 'bob',
             'email': 'bob@example.com',
-            'password': 'secret'
-        }
+            'password': 'secret',
+        },
     )
 
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {
         'username': 'bob',
         'email': 'bob@example.com',
-        'id': 1
+        'id': 1,
+    }
+
+
+def test_get_user___exercicio(client):
+    response = client.get('/users/1')
+
+    assert response.status_code == HTTPStatus.OK
+    assert response.json() == {
+        'username': 'bob',
+        'email': 'bob@example.com',
+        'id': 1,
     }
 
 
@@ -67,3 +78,24 @@ def test_delete_user(client):
     response = client.delete('/users/1')
 
     assert response.status_code == HTTPStatus.NO_CONTENT
+
+
+def test_update_user_should_return_not_found__exercicio(client):
+    response = client.put(
+        '/users/999',
+        json={
+            'username': 'alice',
+            'email': 'alice@example.com',
+            'password': 'secret',
+        },
+    )
+
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert response.json() == {'detail': 'User not found!'}
+
+
+def test_delete_user_should_return_not_found__exercicio(client):
+    response = client.delete('/users/999')
+
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert response.json() == {'detail': 'User not found!'}
