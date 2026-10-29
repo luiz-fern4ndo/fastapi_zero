@@ -5,19 +5,32 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import Session
+from sqlalchemy.pool import StaticPool
 
+from database import get_session
 from main import app
-from models import table_registry
+from models import User, table_registry
+from security import get_password_hash
 
 
 @pytest.fixture
-def client():
-    return TestClient(app)
+def client(session):
+    def get_session_override():
+        return session
+
+    with TestClient(app) as client:
+        app.dependency_overrides[get_session] = get_session_override
+        yield client
+    app.dependency_overrides.clear()
 
 
 @pytest.fixture
 def session():
-    engine = create_engine('sqlite:///:memory:')
+    engine = create_engine(
+        'sqlite:///:memory:',
+        connect_args={'check_same_thread': False},
+        poolclass=StaticPool,
+    )
 
     table_registry.metadata.create_all(engine)
 
@@ -30,9 +43,10 @@ def session():
 @contextmanager
 def _mock_db_time(*, model, time=datetime(2026, 10, 5)):
 
-    def fake_time_hook(mapper, connextion, target):
+    def fake_time_hook(mapper, connection, target):
         if hasattr(target, 'created_at'):
             target.created_at = time
+        if hasattr(target, 'updated_at'):
             target.updated_at = time
 
     event.listen(model, 'before_insert', fake_time_hook)
@@ -45,3 +59,33 @@ def _mock_db_time(*, model, time=datetime(2026, 10, 5)):
 @pytest.fixture
 def mock_db_time():
     return _mock_db_time
+
+
+@pytest.fixture
+def user(session: Session):
+
+    password = 'test'
+
+    user = User(
+        username='test',
+        email='test@test.com',
+        password=get_password_hash(password),
+    )
+
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+
+    user.clean_password = password
+
+    return user
+
+
+@pytest.fixture
+def token(client, user):
+    response = client.post(
+        '/token',
+        data={'username': user.email, 'password': user.clean_password},
+    )
+
+    return response.json()['access_token']

@@ -8,8 +8,11 @@ dependencies = [
     "alembic>=1.20.0",
     "fastapi[standard]>=0.141.1",
     "httpx2>=2.13.1",
+    "pwdlib[argon2]>=0.3.1",
     "pydantic-settings>=2.15.0",
+    "pyjwt>=2.15.1",
     "sqlalchemy>=2.1.1",
+    "tzdata>=2026.5",
 ]
 
 [tool.ruff]
@@ -26,16 +29,21 @@ quote-style = 'single'
 
 [tool.pytest.ini_options]
 pythonpath = "."
-addopts = '-p no:warnings'
+addopts = "-p no:warnings"
 
 [tool.taskipy.tasks]
-lint = 'ruff check'
+lint = "ruff check"
 pre_format = 'ruff check --fix'
 format = 'ruff format'
 run = 'fastapi dev main.py'
 pre_test = 'task lint'
-test = 'pytest -s -x --cov=. -vv'
+test = 'PYTHONWARNINGS="ignore" pytest -s -x --cov=. -vv'
 post_test = 'coverage html'
+
+[tool.uv.workspace]
+members = [
+    "fastapi_eventify",
+]
 
 [dependency-groups]
 dev = [

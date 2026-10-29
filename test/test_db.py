@@ -24,5 +24,5 @@ def test_create_app(session, mock_db_time):
             'email': 'alice@email.com',
             'password': 'secret',
             'created_at': time,
-            'updated_at': time
+            'updated_at': time,
         }
